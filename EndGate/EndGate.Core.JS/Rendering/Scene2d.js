@@ -7,8 +7,6 @@ var EndGate;
     /// <reference path="../Assets/Sizes/Size2d.ts" />
     /// <reference path="../Assets/Vectors/Vector2d.ts" />
     /// <reference path="Camera/Camera2d.ts" />
-    /// <reference path="IRenderer.ts" />
-    /// <reference path="Camera/Camera2dRenderer.ts" />
     (function (Rendering) {
         /**
         * Defines a scene object that is used to maintain a list of renderable objects that are rendered onto a joint game area.
