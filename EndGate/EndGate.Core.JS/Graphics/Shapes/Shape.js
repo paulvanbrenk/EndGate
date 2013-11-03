@@ -15,34 +15,26 @@ var EndGate;
         */
         var Shape = (function (_super) {
             __extends(Shape, _super);
-            function Shape(position, color) {
+            function Shape(pixiBase, position, color) {
                 var _this = this;
-                _super.call(this, position);
+                _super.call(this, pixiBase, position);
                 this._type = "Shape";
 
-                this._fillChangeWire = function (color) {
-                    _this._State.FillStyle = color.toString();
+                this._graphicChangedWire = function () {
+                    _this._BuildGraphic();
                 };
 
-                this._strokeChangeWire = function (color) {
-                    _this._State.StrokeStyle = color.toString();
-                };
-
-                this._shadowChangeWire = function (color) {
-                    _this._State.ShadowColor = color.toString();
-                };
-
-                this.ShadowColor = this._shadowColor = Graphics.Color.Black;
-                this.BorderColor = this._strokeStyle = Graphics.Color.Black;
+                this.BorderColor = this._strokeColor = Graphics.Color.Black;
+                this._borderThickness = 0;
 
                 if (typeof color !== "undefined") {
                     if (typeof color === "string") {
                         color = new Graphics.Color(color);
                     }
 
-                    this.Color = this._fillStyle = color;
+                    this.Color = this._fillColor = color;
                 } else {
-                    this.Color = this._fillStyle = Graphics.Color.Black;
+                    this.Color = this._fillColor = Graphics.Color.Black;
                 }
             }
             Object.defineProperty(Shape.prototype, "Color", {
@@ -50,7 +42,7 @@ var EndGate;
                 * Gets or sets the current shape color.  Valid colors are strings like "red" or "rgb(255,0,0)".
                 */
                 function () {
-                    return this._fillStyle;
+                    return this._fillColor;
                 },
                 set: function (color) {
                     if (typeof color === "string") {
@@ -58,14 +50,14 @@ var EndGate;
                     }
 
                     // Unbind old
-                    this._fillStyle.OnChange.Unbind(this._fillChangeWire);
-                    this._fillStyle = color;
+                    this._fillColor.OnChange.Unbind(this._graphicChangedWire);
+                    this._fillColor = color;
 
                     // Bind new
-                    this._fillStyle.OnChange.Bind(this._fillChangeWire);
+                    this._fillColor.OnChange.Bind(this._graphicChangedWire);
 
                     // Update state
-                    this._fillChangeWire(color);
+                    this._graphicChangedWire();
                 },
                 enumerable: true,
                 configurable: true
@@ -76,10 +68,11 @@ var EndGate;
                 * Gets or sets the current border thickness.
                 */
                 function () {
-                    return this._State.LineWidth;
+                    return this._borderThickness;
                 },
                 set: function (thickness) {
-                    this._State.LineWidth = thickness;
+                    this._borderThickness = thickness;
+                    this._graphicChangedWire();
                 },
                 enumerable: true,
                 configurable: true
@@ -90,7 +83,7 @@ var EndGate;
                 * Gets or sets the current border color.  Valid colors are strings like "red" or "rgb(255,0,0)".
                 */
                 function () {
-                    return this._strokeStyle;
+                    return this._strokeColor;
                 },
                 set: function (color) {
                     if (typeof color === "string") {
@@ -98,82 +91,14 @@ var EndGate;
                     }
 
                     // Unbind old
-                    this._strokeStyle.OnChange.Unbind(this._strokeChangeWire);
-                    this._strokeStyle = color;
+                    this._strokeColor.OnChange.Unbind(this._graphicChangedWire);
+                    this._strokeColor = color;
 
                     // Bind new
-                    this._strokeStyle.OnChange.Bind(this._strokeChangeWire);
+                    this._strokeColor.OnChange.Bind(this._graphicChangedWire);
 
                     // Update state
-                    this._strokeChangeWire(color);
-                },
-                enumerable: true,
-                configurable: true
-            });
-
-            Object.defineProperty(Shape.prototype, "ShadowColor", {
-                get: /**
-                * Gets or sets the current shadow color.  Valid colors are strings like "red" or "rgb(255,0,0)".
-                */
-                function () {
-                    return this._shadowColor;
-                },
-                set: function (color) {
-                    if (typeof color === "string") {
-                        color = new Graphics.Color(color);
-                    }
-
-                    // Unbind old
-                    this._shadowColor.OnChange.Unbind(this._shadowChangeWire);
-                    this._shadowColor = color;
-
-                    // Bind new
-                    this._shadowColor.OnChange.Bind(this._shadowChangeWire);
-
-                    // Update state
-                    this._shadowChangeWire(color);
-                },
-                enumerable: true,
-                configurable: true
-            });
-
-            Object.defineProperty(Shape.prototype, "ShadowX", {
-                get: /**
-                * Gets or sets the current horizontal shadow position.
-                */
-                function () {
-                    return this._State.ShadowOffsetX;
-                },
-                set: function (x) {
-                    this._State.ShadowOffsetX = x;
-                },
-                enumerable: true,
-                configurable: true
-            });
-
-            Object.defineProperty(Shape.prototype, "ShadowY", {
-                get: /**
-                * Gets or sets the current vertical shadow position.
-                */
-                function () {
-                    return this._State.ShadowOffsetY;
-                },
-                set: function (y) {
-                    this._State.ShadowOffsetY = y;
-                },
-                enumerable: true,
-                configurable: true
-            });
-
-            Object.defineProperty(Shape.prototype, "ShadowBlur", {
-                get: /**
-                * Gets or sets the current shadow blur.
-                */
-                function () {
-                    return this._State.ShadowBlur;
-                },
-                set: function (blur) {
-                    this._State.ShadowBlur = blur;
+                    this._graphicChangedWire();
                 },
                 enumerable: true,
                 configurable: true
@@ -184,55 +109,39 @@ var EndGate;
                 this.BorderColor = color;
             };
 
-            Shape.prototype.Shadow = function (x, y, color, blur) {
-                this.ShadowX = x;
-                this.ShadowY = y;
-                this.ShadowColor = color;
-                this.ShadowBlur = blur;
-            };
+            // Should be called before any shape logic builds graphics
+            Shape.prototype._StartBuildGraphic = function () {
+                this.PixiBase.clear();
 
-            Shape.prototype._StartDraw = function (context) {
-                _super.prototype._StartDraw.call(this, context);
-                context.beginPath();
-            };
-
-            Shape.prototype._EndDraw = function (context) {
-                context.fill();
-
-                if (this._State.LineWidth > 0) {
-                    context.stroke();
-                } else {
-                    context.closePath();
+                if (this._borderThickness > 0) {
+                    this.PixiBase.lineStyle(this._borderThickness, this._strokeColor.toHexValue(), this._strokeColor.A);
                 }
 
-                _super.prototype._EndDraw.call(this, context);
+                this.PixiBase.beginFill(this._fillColor.toHexValue(), this._fillColor.A);
             };
 
-            // This should be overridden if you want to build a proper shape
-            Shape.prototype._BuildPath = function (context) {
+            // Should be overridden to control what's built;
+            Shape.prototype._BuildGraphic = function () {
+                this._StartBuildGraphic();
+
+                // Overridden graphic code should go here
+                this._EndBuildGraphic();
             };
 
-            /**
-            * Draws the shape onto the given context.  If this shape is part of a scene the Draw function will be called automatically.
-            * @param context The canvas context to draw the shape onto.
-            */
-            Shape.prototype.Draw = function (context) {
-                this._StartDraw(context);
-                this._BuildPath(context);
-                this._EndDraw(context);
+            // Should be called before any shape logic builds graphics
+            Shape.prototype._EndBuildGraphic = function () {
+                this.PixiBase.endFill();
             };
 
             Shape.prototype.Dispose = function () {
                 _super.prototype.Dispose.call(this);
 
-                this._fillStyle.OnChange.Unbind(this._fillChangeWire);
-                this._strokeStyle.OnChange.Unbind(this._strokeChangeWire);
-                this._shadowColor.OnChange.Unbind(this._shadowChangeWire);
+                this._fillColor.OnChange.Unbind(this._graphicChangedWire);
+                this._strokeColor.OnChange.Unbind(this._graphicChangedWire);
             };
 
             Shape.prototype._Clone = function (graphic) {
                 graphic.Border(this.BorderThickness, this.BorderColor.Clone());
-                graphic.Shadow(this.ShadowX, this.ShadowY, this.ShadowColor.Clone(), this.ShadowBlur);
 
                 _super.prototype._Clone.call(this, graphic);
             };

@@ -121,6 +121,7 @@ else {
 	New-Item $outputDeclarationPath -type file
 }
 
+Add-Content $outputDeclarationPath "<reference path='typings/pixi/pixi.d.ts' />"
 
 tsc --out $outputDeclarationPath --declaration $allFilesStr --target ES5
 

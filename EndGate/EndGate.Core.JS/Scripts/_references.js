@@ -1,1 +1,2 @@
-﻿/// <reference path="endGate.core.client.js" />
+﻿/// <reference path="endgate.d.ts" />
+/// <reference path="typings/pixi/pixi.d.ts" />
